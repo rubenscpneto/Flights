@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  body, html, #root {
+    @apply h-full bg-[#202124] text-gray-200;
+  }
+}
+
+/* Dark Mode for React Datepicker */
+.react-datepicker {
+  @apply bg-[#3c4043] border-gray-600;
+}
+.react-datepicker__header {
+  @apply bg-[#303134] border-b-gray-600;
+}
+.react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header {
+  @apply text-gray-100;
+}
+.react-datepicker__day-name, .react-datepicker__day, .react-datepicker__time-name {
+  @apply text-gray-300;
+}
+.react-datepicker__day:hover, .react-datepicker__month-text:hover, .react-datepicker__quarter-text:hover, .react-datepicker__year-text:hover {
+  @apply bg-gray-700;
+}
+.react-datepicker__day--selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range, .react-datepicker__month--in-selecting-range, .react-datepicker__month--in-range, .react-datepicker__quarter--in-selecting-range, .react-datepicker__quarter--in-range, .react-datepicker__year--in-selecting-range, .react-datepicker__year--in-range {
+  @apply bg-blue-600 text-white;
+}
+.react-datepicker__day--disabled {
+  @apply text-gray-500;
+}
+.react-datepicker__navigation-icon::before {
+    border-color: #fff;
+}
