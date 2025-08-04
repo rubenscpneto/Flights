@@ -1,6 +1,7 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
-const FlightCard = ({ flight }) => {
+const FlightCard = ({ flight, onSelect }) => {
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -20,12 +21,20 @@ const FlightCard = ({ flight }) => {
   };
 
   const getCarrierLogo = (carrier) => {
-    // In a real app, you would have a mapping of carrier names to logo URLs
     return `https://logos.skysscanner.com/images/airlines/favicon/${carrier.iata}.png`;
   }
+  
+  const itemVariants = {
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    hidden: { opacity: 0, y: 20 },
+  };
 
   return (
-    <div className="p-4 mb-4 bg-[#303134] border border-gray-700 rounded-lg shadow-sm hover:shadow-lg hover:border-gray-600 transition-all">
+    <motion.button
+        onClick={onSelect}
+        variants={itemVariants}
+        className="w-full text-left p-4 bg-[#3c4043] rounded-lg shadow-md hover:bg-gray-700 transition-colors"
+    >
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="flex items-center w-full sm:w-1/4">
           <img 
@@ -52,12 +61,9 @@ const FlightCard = ({ flight }) => {
         </div>
         <div className="w-full sm:w-1/4 text-right">
           <div className="text-xl font-bold text-green-400">{formatPrice(flight.price.raw)}</div>
-          <button className="w-full sm:w-auto mt-2 sm:mt-0 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 text-sm font-semibold">
-            Select
-          </button>
         </div>
       </div>
-    </div>
+    </motion.button>
   );
 };
 

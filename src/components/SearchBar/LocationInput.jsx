@@ -6,7 +6,6 @@ const LocationInput = ({ placeholder, onAirportSelect, airport }) => {
   const [suggestions, setSuggestions] = useState([]);
   
   useEffect(() => {
-    // Set the input text if an airport is already selected
     if (airport && airport.presentation) {
       setQuery(airport.presentation.suggestionTitle);
     } else {
@@ -15,7 +14,6 @@ const LocationInput = ({ placeholder, onAirportSelect, airport }) => {
   }, [airport]);
 
   useEffect(() => {
-    // Don't search if the query matches the selected airport's title
     if (query.length < 2 || (airport && query === airport.presentation.suggestionTitle)) {
       setSuggestions([]);
       return;
@@ -52,18 +50,18 @@ const LocationInput = ({ placeholder, onAirportSelect, airport }) => {
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="bg-transparent text-white w-full focus:outline-none placeholder-gray-400"
+        className="bg-transparent text-gray-800 dark:text-white w-full focus:outline-none placeholder-gray-500 dark:placeholder-gray-400"
       />
       {suggestions.length > 0 && (
-        <ul className="absolute z-20 w-full mt-2 bg-[#3c4043] border border-gray-600 rounded-lg shadow-lg">
+        <ul className="absolute z-20 w-full mt-2 bg-white dark:bg-[#3c4043] border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
           {suggestions.map((suggestion) => (
             <li
               key={suggestion.skyId}
               onClick={() => handleSelect(suggestion)}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-700 text-gray-200"
+              className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
             >
               <div className="font-semibold">{suggestion.presentation.title}</div>
-              <div className="text-sm text-gray-400">{suggestion.presentation.subtitle}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{suggestion.presentation.subtitle}</div>
             </li>
           ))}
         </ul>

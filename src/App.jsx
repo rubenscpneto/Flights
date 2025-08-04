@@ -1,127 +1,70 @@
-import React, { useState, useMemo } from 'react';
-import SearchBar from './components/SearchBar/SearchBar';
-import ResultsDisplay from './components/Results/ResultsDisplay';
-import { searchFlights } from './api/skyScrapper.mock';
-import './App.css';
+import React, { useEffect } from 'react';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
+import { SignIn, SignUp, UserButton, SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react';
+import { supabase } from './supabaseClient';
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import ThemeToggle from './components/ThemeToggle';
+
+const Header = () => (
+  <header className="flex justify-between items-center p-4 bg-white dark:bg-[#303134] text-gray-800 dark:text-white shadow-md">
+    <Link to="/" className="text-xl font-bold tracking-wider">FlightFinder</Link>
+    <div className="flex items-center gap-4">
+      <ThemeToggle />
+      <SignedIn>
+        <Link to="/dashboard" className="px-3 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Dashboard</Link>
+        <UserButton afterSignOutUrl="/"/>
+      </SignedIn>
+      <SignedOut>
+        <Link to="/sign-in" className="px-3 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Sign In</Link>
+      </SignedOut>
+    </div>
+  </header>
+);
+
+// This component will protect our dashboard route
+const ProtectedDashboard = () => {
+    const { isSignedIn } = useUser();
+    return isSignedIn ? <DashboardPage /> : <Navigate to="/sign-in" />;
+}
+
+// A wrapper to center the auth components
+const AuthLayout = ({ children }) => (
+    <div className="flex justify-center items-center h-[calc(100vh-100px)]">
+        {children}
+    </div>
+);
+
 
 function App() {
-  const [flightResults, setFlightResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    stops: [] // e.g., [0, 1] for "Non-stop" and "1 stop"
-  });
-  const [sortBy, setSortBy] = useState('price'); // 'price' or 'duration'
-  
-  const [flightLegs, setFlightLegs] = useState([
-    { id: 1, origin: null, destination: null, date: new Date() },
-    { id: 2, origin: null, destination: null, date: new Date(new Date().setDate(new Date().getDate() + 7)) },
-  ]);
+  const { getToken } = useAuth();
 
-  const handleUpdateLeg = (index, field, value) => {
-    const newLegs = [...flightLegs];
-    newLegs[index][field] = value;
-    setFlightLegs(newLegs);
-  };
+  useEffect(() => {
+    const setSupabaseAuth = async () => {
+      const supabaseAccessToken = await getToken({ template: "supabase" });
 
-  const handleAddLeg = () => {
-    setFlightLegs([
-      ...flightLegs,
-      { id: Date.now(), origin: null, destination: null, date: new Date() }
-    ]);
-  };
-
-  const handleRemoveLeg = (index) => {
-    // Prevent removing if only two legs are left
-    if (flightLegs.length <= 2) return; 
-    const newLegs = flightLegs.filter((_, i) => i !== index);
-    setFlightLegs(newLegs);
-  };
-
-  const handleFlightSearch = async (searchParams) => {
-    if (searchParams.tripType !== 'multicity') {
-        if (!searchParams.departureAirport || !searchParams.destinationAirport) {
-            setError('Please select both a departure and destination airport.');
-            return;
-        }
-    } else {
-        for(const leg of flightLegs) {
-            if(!leg.origin || !leg.destination) {
-                setError('Please fill all origin and destination fields for multi-city search.');
-                return;
-            }
-        }
-    }
-
-    setIsLoading(true);
-    setError('');
-    setFlightResults([]);
-
-    try {
-        if (searchParams.tripType === 'multicity') {
-            console.log("Searching for multi-city flights with these legs:", searchParams.flightLegs);
-            const response = await searchFlights(searchParams.flightLegs[0]);
-            setFlightResults(response.data.data);
-        } else {
-            const response = await searchFlights(searchParams);
-            setFlightResults(response.data.data);
-        }
-    } catch (err) {
-      setError('Sorry, we could not find any flights for that search. Please try again.');
-      console.error('Flight search error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const processedResults = useMemo(() => {
-    let results = [...flightResults];
-
-    if (filters.stops.length > 0) {
-        results = results.filter(flight => {
-            const stopCount = flight.legs[0].stopCount;
-            const twoPlusStops = filters.stops.includes(2) && stopCount >= 2;
-            return filters.stops.includes(stopCount) || twoPlusStops;
+      if (supabaseAccessToken) {
+        supabase.auth.setSession({
+          access_token: supabaseAccessToken,
+          refresh_token: supabaseAccessToken,
         });
-    }
+      }
+    };
 
-    if (sortBy === 'price') {
-        results.sort((a, b) => a.price.raw - b.price.raw);
-    } else if (sortBy === 'duration') {
-        results.sort((a, b) => a.legs[0].durationInMinutes - b.legs[0].durationInMinutes);
-    }
-
-    return results;
-  }, [flightResults, filters, sortBy]);
-
+    setSupabaseAuth();
+  }, [getToken]);
+  
   return (
-    <div className="font-sans">
-        <div className="container mx-auto p-4">
-            <header className="text-center my-8">
-                <h1 className="text-5xl font-bold text-gray-100">Flight Search</h1>
-                <p className="text-gray-400 mt-2">Find the best flights for your next adventure</p>
-            </header>
-            <main>
-                <SearchBar 
-                    onSearch={handleFlightSearch} 
-                    flightLegs={flightLegs}
-                    handleUpdateLeg={handleUpdateLeg}
-                    handleAddLeg={handleAddLeg}
-                    handleRemoveLeg={handleRemoveLeg}
-                />
-                <div className="flex flex-col lg:flex-row gap-8 mt-8">
-                    <ResultsDisplay 
-                        flights={processedResults} 
-                        loading={isLoading} 
-                        error={error} 
-                        filters={filters}
-                        setFilters={setFilters}
-                        sortBy={sortBy}
-                        setSortBy={setSortBy}
-                    />
-                </div>
-            </main>
-        </div>
+    <div className="font-sans bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <Header />
+      <main className="container mx-auto p-4">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/sign-in/*" element={<AuthLayout><SignIn routing="path" path="/sign-in" /></AuthLayout>} />
+          <Route path="/sign-up/*" element={<AuthLayout><SignUp routing="path" path="/sign-up" /></AuthLayout>} />
+          <Route path="/dashboard" element={<ProtectedDashboard />} />
+        </Routes>
+      </main>
     </div>
   );
 }
