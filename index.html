@@ -1,10 +1,18 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/airplane.png" />
     <title>Flights</title>
+    <script>
+      // Immediately apply the theme on initial load
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark'; // Default to dark
+        const root = document.documentElement;
+        root.classList.add(theme);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

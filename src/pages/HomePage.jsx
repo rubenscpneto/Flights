@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react'; // 1. Add useEffect
+import { useLocation } from 'react-router-dom'; // 2. Import useLocation
 import SearchBar from '../components/SearchBar/SearchBar';
 import ResultsDisplay from '../components/Results/ResultsDisplay';
 import { searchFlights } from '../api/skyScrapper.mock';
@@ -16,6 +17,42 @@ const HomePage = () => {
         { id: 2, origin: null, destination: null, date: new Date(new Date().setDate(new Date().getDate() + 7)) },
     ]);
     const [searchParams, setSearchParams] = useState(null);
+    const location = useLocation(); // 3. Get the location object
+
+    // 4. Add this useEffect to handle incoming searches from the dashboard
+    useEffect(() => {
+        const incomingSearch = location.state?.savedSearch;
+        if (incomingSearch) {
+            console.log("Rerunning saved search:", incomingSearch);
+
+            // Reconstruct the airport objects for the state
+            const departureAirport = {
+                skyId: incomingSearch.origin_id,
+                presentation: { suggestionTitle: incomingSearch.origin_name }
+            };
+            const destinationAirport = {
+                skyId: incomingSearch.destination_id,
+                presentation: { suggestionTitle: incomingSearch.destination_name }
+            };
+
+            // Update the flight legs state to pre-fill the form
+            setFlightLegs([
+                { ...flightLegs[0], origin: departureAirport, destination: destinationAirport, date: new Date(incomingSearch.departure_date) },
+                flightLegs[1] // Keep the second leg as is or update if you save return dates
+            ]);
+
+            // Construct the search parameters and execute the search
+            const searchParamsToRun = {
+                tripType: 'roundtrip', // Or determine this based on saved data
+                departureAirport,
+                destinationAirport,
+                departureDate: new Date(incomingSearch.departure_date),
+                // Add passengers, cabinClass etc. if you save them
+            };
+            handleFlightSearch(searchParamsToRun);
+        }
+    }, [location.state]); // This effect runs only when the location state changes
+
 
     const handleUpdateLeg = (index, field, value) => {
         const newLegs = [...flightLegs];
