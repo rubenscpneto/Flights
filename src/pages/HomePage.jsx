@@ -15,6 +15,7 @@ const HomePage = () => {
         { id: 1, origin: null, destination: null, date: new Date() },
         { id: 2, origin: null, destination: null, date: new Date(new Date().setDate(new Date().getDate() + 7)) },
     ]);
+    const [searchParams, setSearchParams] = useState(null);
 
     const handleUpdateLeg = (index, field, value) => {
         const newLegs = [...flightLegs];
@@ -35,9 +36,10 @@ const HomePage = () => {
         setFlightLegs(newLegs);
     };
 
-    const handleFlightSearch = async (searchParams) => {
-        if (searchParams.tripType !== 'multicity') {
-            if (!searchParams.departureAirport || !searchParams.destinationAirport) {
+    const handleFlightSearch = async (params) => {
+        setSearchParams(params);
+        if (params.tripType !== 'multicity') {
+            if (!params.departureAirport || !params.destinationAirport) {
                 setError('Please select both a departure and destination airport.');
                 return;
             }
@@ -55,12 +57,12 @@ const HomePage = () => {
         setFlightResults([]);
 
         try {
-            if (searchParams.tripType === 'multicity') {
-                console.log("Searching for multi-city flights with these legs:", searchParams.flightLegs);
-                const response = await searchFlights(searchParams.flightLegs[0]);
+            if (params.tripType === 'multicity') {
+                console.log("Searching for multi-city flights with these legs:", params.flightLegs);
+                const response = await searchFlights(params.flightLegs[0]);
                 setFlightResults(response.data.data);
             } else {
-                const response = await searchFlights(searchParams);
+                const response = await searchFlights(params);
                 setFlightResults(response.data.data);
             }
         } catch (err) {
@@ -109,6 +111,7 @@ const HomePage = () => {
                     setFilters={setFilters}
                     sortBy={sortBy}
                     setSortBy={setSortBy}
+                    searchParams={searchParams}
                 />
             </div>
         </div>

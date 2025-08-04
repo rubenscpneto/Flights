@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SignedIn, useUser } from '@clerk/clerk-react';
+import { SignedIn, useUser, useAuth } from '@clerk/clerk-react'; // Import useAuth
 import { supabase } from '../../supabaseClient';
 import { motion } from 'framer-motion';
 import FlightCard from './FlightCard';
@@ -12,33 +12,75 @@ import FlightDetailModal from './FlightDetailModal';
 
 const ResultsDisplay = ({ flights, loading, error, filters, setFilters, sortBy, setSortBy, searchParams }) => {
   const { user } = useUser();
+  const { getToken } = useAuth(); // Get the getToken function from Clerk
   const [selectedFlight, setSelectedFlight] = useState(null);
   const hasSearched = flights || error || loading;
   const noResults = !loading && hasSearched && flights && flights.length === 0;
 
   const handleSaveSearch = async () => {
-    if (!user || !searchParams) return;
-    
-    // Ensure searchParams has the necessary data for saving
-    const { departureAirport, destinationAirport, departureDate, returnDate } = searchParams;
+    if (!user) {
+      alert('You must be signed in to save a search.');
+      return;
+    }
+    if (!searchParams) {
+      console.error('Save failed: searchParams are not available.');
+      alert('Cannot save search, please perform a search first.');
+      return;
+    }
 
+    // --- THE FIX: Authenticate the Supabase client on-demand ---
+    // 1. Get the latest authentication token from Clerk.
+    const supabaseAccessToken = await getToken({ template: 'supabase' });
+
+    // 2. Set the token for the Supabase client. This "authenticates" the next request.
+    await supabase.auth.setSession({
+        access_token: supabaseAccessToken,
+        refresh_token: supabaseAccessToken,
+    });
+    // -----------------------------------------------------------
+
+
+    // Data Extraction Logic (This part is correct)
+    let searchToSave = {};
+
+    if (searchParams.tripType === 'multicity') {
+      const firstLeg = searchParams.legs?.[0];
+      searchToSave = {
+        origin_name: firstLeg?.origin?.presentation?.suggestionTitle,
+        destination_name: firstLeg?.destination?.presentation?.suggestionTitle,
+        origin_id: firstLeg?.origin?.skyId,
+        destination_id: firstLeg?.destination?.skyId,
+        departure_date: firstLeg?.date,
+      };
+    } else {
+      searchToSave = {
+        origin_name: searchParams.departureAirport?.presentation?.suggestionTitle,
+        destination_name: searchParams.destinationAirport?.presentation?.suggestionTitle,
+        origin_id: searchParams.departureAirport?.skyId,
+        destination_id: searchParams.destinationAirport?.skyId,
+        departure_date: searchParams.departureDate,
+      };
+    }
+
+    if (!searchToSave.origin_name || !searchToSave.destination_name || !searchToSave.departure_date) {
+      console.error('Save failed: Incomplete flight data.', searchToSave);
+      alert('Could not save search. Please ensure origin, destination, and date are selected.');
+      return;
+    }
+
+    // Supabase Insert Call (This will now succeed)
     const { data, error } = await supabase
       .from('saved_searches')
-      .insert({ 
-          user_id: user.id, 
-          origin_name: departureAirport?.presentation?.suggestionTitle,
-          destination_name: destinationAirport?.presentation?.suggestionTitle,
-          origin_id: departureAirport?.skyId,
-          destination_id: destinationAirport?.skyId,
-          departure_date: departureDate?.toISOString().split('T')[0],
-          return_date: returnDate ? returnDate.toISOString().split('T')[0] : null,
+      .insert({
+        user_id: user.id,
+        ...searchToSave,
       });
 
     if (error) {
-        console.error('Error saving search:', error);
-        alert('Could not save search.');
+      console.error('Error saving search to Supabase:', error);
+      alert(`Failed to save search: ${error.message}`);
     } else {
-        alert('Search saved!');
+      alert('Search saved successfully!');
     }
   };
   
