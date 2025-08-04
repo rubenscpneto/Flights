@@ -11,6 +11,7 @@ function App() {
   const [filters, setFilters] = useState({
     stops: [] // e.g., [0, 1] for "Non-stop" and "1 stop"
   });
+  const [sortBy, setSortBy] = useState('price'); // 'price' or 'duration'
   
   const [flightLegs, setFlightLegs] = useState([
     { id: 1, origin: null, destination: null, date: new Date() },
@@ -58,10 +59,7 @@ function App() {
 
     try {
         if (searchParams.tripType === 'multicity') {
-            // Placeholder for multi-city API calls
             console.log("Searching for multi-city flights with these legs:", searchParams.flightLegs);
-            // In a real app, you would loop through each leg and make a separate API call.
-            // For now, we'll just use the first leg to get some mock data.
             const response = await searchFlights(searchParams.flightLegs[0]);
             setFlightResults(response.data.data);
         } else {
@@ -76,17 +74,25 @@ function App() {
     }
   };
   
-  const filteredResults = useMemo(() => {
-    if (filters.stops.length === 0) {
-      return flightResults; // No filter applied, return all
+  const processedResults = useMemo(() => {
+    let results = [...flightResults];
+
+    if (filters.stops.length > 0) {
+        results = results.filter(flight => {
+            const stopCount = flight.legs[0].stopCount;
+            const twoPlusStops = filters.stops.includes(2) && stopCount >= 2;
+            return filters.stops.includes(stopCount) || twoPlusStops;
+        });
     }
-    return flightResults.filter(flight => {
-      const stopCount = flight.legs[0].stopCount;
-      // For "2+" stops, check if stopCount is 2 or more
-      const twoPlusStops = filters.stops.includes(2) && stopCount >= 2;
-      return filters.stops.includes(stopCount) || twoPlusStops;
-    });
-  }, [flightResults, filters]);
+
+    if (sortBy === 'price') {
+        results.sort((a, b) => a.price.raw - b.price.raw);
+    } else if (sortBy === 'duration') {
+        results.sort((a, b) => a.legs[0].durationInMinutes - b.legs[0].durationInMinutes);
+    }
+
+    return results;
+  }, [flightResults, filters, sortBy]);
 
   return (
     <div className="font-sans">
@@ -105,11 +111,13 @@ function App() {
                 />
                 <div className="flex flex-col lg:flex-row gap-8 mt-8">
                     <ResultsDisplay 
-                        flights={filteredResults} 
+                        flights={processedResults} 
                         loading={isLoading} 
                         error={error} 
                         filters={filters}
                         setFilters={setFilters}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
                     />
                 </div>
             </main>

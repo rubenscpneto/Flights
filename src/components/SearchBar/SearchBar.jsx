@@ -5,13 +5,13 @@ import "react-datepicker/dist/react-datepicker.css";
 
 // --- SVG Icons for a cleaner look ---
 const CalendarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mr-2">
+    <svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mr-2">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
     </svg>
 );
 
 const LocationPinIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mr-2">
+    <svg xmlns="http://www.w.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 mr-2">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
     </svg>
 );
@@ -77,7 +77,7 @@ const SearchBar = ({
             {flightLegs.map((leg, index) => (
               <div key={leg.id} className="flex flex-col md:flex-row items-center gap-2 mb-2">
                 {/* Location Inputs */}
-                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
                   <div className="relative flex items-center border-b sm:border-b-0 sm:border-r border-gray-500 p-2.5">
                       <LocationPinIcon />
                       <LocationInput
@@ -97,7 +97,7 @@ const SearchBar = ({
                 </div>
                 
                 {/* Date Input */}
-                <div className="flex-grow md:flex-grow-0 bg-[#3c4043] rounded-lg border border-gray-500 w-full md:w-auto">
+                <div className="flex-1 md:flex-grow-0 bg-[#3c4043] rounded-lg border border-gray-500 w-full md:w-auto">
                    <div className="relative flex items-center p-2.5">
                         <CalendarIcon />
                         <DatePicker
@@ -135,7 +135,7 @@ const SearchBar = ({
       ) : (
         // --- Roundtrip / One-way UI ---
         <div className="flex flex-col lg:flex-row items-stretch gap-2">
-            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
                 <div className="relative flex items-center border-b sm:border-b-0 sm:border-r border-gray-500 p-2.5">
                     <LocationPinIcon />
                     <LocationInput
@@ -153,7 +153,7 @@ const SearchBar = ({
                     />
                 </div>
             </div>
-            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 bg-[#3c4043] rounded-lg border border-gray-500 w-full">
                 <div className="relative flex items-center border-b sm:border-b-0 sm:border-r border-gray-500 p-2.5">
                     <CalendarIcon />
                     <DatePicker
